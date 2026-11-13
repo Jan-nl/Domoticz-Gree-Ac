@@ -2,7 +2,7 @@
 # Version 1.0.8
 
 """
-<plugin key="GreeAC" name="Gree AC Local" author="4D" version="1.0.8"
+<plugin key="GreeAC" name="Gree AC Local Jan" author="4D" version="1.0.8"
         wikilink="https://github.com/blooesky/Domoticz-Gree-Ac"
         externallink="https://github.com/blooesky/Domoticz-Gree-Ac">
     <params>
@@ -60,7 +60,10 @@ if WORKER_MODE:
     import asyncio
     import logging
 
-    from greeclimate.discovery import Discovery, Listener
+    #from greeclimate.discovery import Discovery, Listener
+    #from greeclimate.device import Device, Props
+    from greeclimate.discovery import Listener
+    from greeclimate.deviceinfo import DeviceInfo
     from greeclimate.device import Device, Props
 
     logging.basicConfig(
@@ -112,63 +115,11 @@ if WORKER_MODE:
             self.device = None
             self.device_info = None
 
+
         async def discover(self):
-            # Discovery is the only fragile part during Domoticz startup.
-            # Both Gree plugin instances normally start at almost the same
-            # moment, so a single short broadcast window can occasionally
-            # miss an otherwise healthy unit.
-            #
-            # Keep the event-based discovery because it returns immediately
-            # when the target replies, but allow several complete retries.
-
-            try:
-                mac_bytes = bytes.fromhex(self.mac)
-                initial_stagger = (sum(mac_bytes) % 7) * 0.10
-            except Exception:
-                initial_stagger = 0.0
-
-            if initial_stagger:
-                await asyncio.sleep(initial_stagger)
-
-            for attempt in range(1, WORKER_DISCOVERY_RETRIES + 1):
-                listener = WorkerDiscoveryListener(self.ip, self.mac)
-
-                # Do NOT pass a loop explicitly. This object is created while
-                # the worker's one asyncio loop is already running.
-                discovery = Discovery(timeout=WORKER_DISCOVERY_WAIT)
-                discovery.add_listener(listener)
-
-                try:
-                    await discovery.search_devices()
-
-                    try:
-                        await asyncio.wait_for(
-                            listener.found_event.wait(),
-                            timeout=WORKER_DISCOVERY_WAIT,
-                        )
-                    except asyncio.TimeoutError:
-                        pass
-
-                    if listener.found_device is not None:
-                        self.device_info = listener.found_device
-                        return self.device_info
-
-                finally:
-                    try:
-                        discovery.close()
-                    except Exception:
-                        pass
-
-                if attempt < WORKER_DISCOVERY_RETRIES:
-                    await asyncio.sleep(
-                        WORKER_DISCOVERY_RETRY_DELAY * attempt
-                    )
-
-            raise RuntimeError(
-                f"Gree device not found after "
-                f"{WORKER_DISCOVERY_RETRIES} discovery attempts: "
-                f"{self.ip} / {self.mac}"
-            )
+            # Geen broadcast-scan: direct unicast naar het opgegeven IP/MAC.
+            self.device_info = DeviceInfo(self.ip, 7000, self.mac, self.mac)
+            return self.device_info
 
         async def ensure_device(self):
             if self.device is not None:
