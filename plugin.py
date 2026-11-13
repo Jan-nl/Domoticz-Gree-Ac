@@ -2,7 +2,7 @@
 # Version 1.0.8
 
 """
-<plugin key="GreeAC" name="Gree AC Local Jan" author="4D" version="1.0.8"
+<plugin key="GreeAC" name="Gree AC Local" author="4D" version="1.0.8"
         wikilink="https://github.com/blooesky/Domoticz-Gree-Ac"
         externallink="https://github.com/blooesky/Domoticz-Gree-Ac">
     <params>
@@ -60,8 +60,6 @@ if WORKER_MODE:
     import asyncio
     import logging
 
-    #from greeclimate.discovery import Discovery, Listener
-    #from greeclimate.device import Device, Props
     from greeclimate.discovery import Listener
     from greeclimate.deviceinfo import DeviceInfo
     from greeclimate.device import Device, Props
@@ -117,7 +115,7 @@ if WORKER_MODE:
 
 
         async def discover(self):
-            # Geen broadcast-scan: direct unicast naar het opgegeven IP/MAC.
+            # No broadcast-scan: direct unicast to the entered IP/MAC.
             self.device_info = DeviceInfo(self.ip, 7000, self.mac, self.mac)
             return self.device_info
 
