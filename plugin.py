@@ -306,6 +306,7 @@ UNIT_SWING = 6
 UNIT_LIGHT = 7
 UNIT_TURBO = 8
 UNIT_RAW = 9
+UNIT_QUIET = 10
 
 MODE_OPTIONS = {
     "LevelActions": "|||||",
@@ -597,6 +598,11 @@ class BasePlugin:
                 Name="Gree Light", Unit=UNIT_LIGHT, TypeName="Switch"
             ).Create()
 
+        if UNIT_QUIET not in Devices:
+            Domoticz.Device(
+                Name="Gree QUIET", Unit=UNIT_QUIET, TypeName="Switch"
+            ).Create()
+
         if UNIT_TURBO not in Devices:
             Domoticz.Device(
                 Name="Gree Turbo", Unit=UNIT_TURBO, TypeName="Switch"
@@ -806,6 +812,10 @@ class BasePlugin:
             commands.append(
                 (Props.TURBO.value, 1 if Command == "On" else 0)
             )
+        elif Unit == UNIT_QUIET:
+            commands.append(
+                (Props.QUIET.value, 1 if Command == "On" else 0)
+            )
 
         if not commands:
             return
@@ -842,6 +852,7 @@ class BasePlugin:
         self._consider_raw_state(raw, Props.SWING_VERT, set(range(0, 12)))
         self._consider_raw_state(raw, Props.LIGHT, {0, 1})
         self._consider_raw_state(raw, Props.TURBO, {0, 1})
+        self._consider_raw_state(raw, Props.QUIET, {0, 1})
 
         self.render_confirmed_state()
 
@@ -986,6 +997,12 @@ class BasePlugin:
             self.update_switch(
                 UNIT_TURBO,
                 self.confirmed[Props.TURBO.value] == 1,
+            )
+
+        if Props.QUIET.value in self.confirmed:
+            self.update_switch(
+                UNIT_QUIET,
+                self.confirmed[Props.QUIET.value] == 1,
             )
 
     # -----------------------------------------------------------------
